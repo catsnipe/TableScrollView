@@ -39,8 +39,10 @@ public partial class TableScrollViewer : MonoBehaviour
         image_scrollbar  = scrollbar.gameObject.GetComponentInChildren<Image>();
         cgroup_scrollbar = safeGetCanvasGroup(scrollbar);
 
-
-        setScrollbarAlpha(0);
+        if (ScrollbarAutoFadeout == true)
+        {
+            setScrollbarAlpha(0);
+        }
     }
 
     /// <summary>
