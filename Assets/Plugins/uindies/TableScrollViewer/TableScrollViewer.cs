@@ -77,12 +77,33 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         public eKeyMoveFlag Flag;
     }
 
+    /// <summary>
+    /// キー入力が必要になった時に呼ばれるイベント
+    /// </summary>
     [Serializable]
     public class OnKeyDownEvent : UnityEvent<KeyDownArgs> {}
 
+    /// <summary>
+    /// 選択、またはキャンセルされた時に呼ばれるイベント
+    /// object[] table, int itemIndex, int subIndex, bool isCancel
+    /// 
+    /// (table) テーブル
+    /// (itemIndex) 選択されている行
+    /// (subIndex) 選択されている列（行のサブアイテム）
+    /// (isCancel) キャンセルボタンが押された場合 true
+    /// </summary>
     [Serializable]
     public class OnSelectEvent : UnityEvent<object[], int, int, bool> {}
 
+    /// <summary>
+    /// カーソルが移動した時に発生するイベント
+    /// object[] table, int itemIndex, int subIndex, bool userInput
+    /// 
+    /// (table) テーブル
+    /// (itemIndex) 選択されている行
+    /// (subIndex) 選択されている列（行のサブアイテム）
+    /// (userInput) ユーザー選択で変化した場合 true、SetSelectedIndex() の場合 false
+    /// </summary>
     [Serializable]
     public class OnCursorMoveEvent : UnityEvent<object[], int, int, bool> {}
 
