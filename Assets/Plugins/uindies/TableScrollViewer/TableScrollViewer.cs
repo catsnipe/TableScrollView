@@ -502,6 +502,23 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
 
     /// <summary>
+    /// 表示内容を更新する（一行分）
+    /// </summary>
+    public void Refresh(int index)
+    {
+        if (checkUsable() == false)
+        {
+            return;
+        }
+
+        NodeGroup group = nodeGroups[index];
+        if (group.Rect.gameObject.activeInHierarchy == true)
+        {
+            group.Node.Refresh();
+        }
+    }
+
+    /// <summary>
     /// 入力許可、禁止
     /// </summary>
     /// <param name="enabled">true..許可、false..禁止</param>
@@ -627,12 +644,16 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (reserveSelectedIndex == -1)
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
+                OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+
                 focusIsAnimation = true;
                 timeNormPos = Time.time;
             }
             else
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+
                 timeNormPos = Time.time - ScrollTime;
             }
         }
