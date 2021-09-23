@@ -510,8 +510,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         {
             return;
         }
+        if (nodeIndex.ContainsKey(index) == false)
+        {
+            return;
+        }
 
-        NodeGroup group = nodeGroups[index];
+        NodeGroup group = nodeIndex[index];
         if (group.Rect.gameObject.activeInHierarchy == true)
         {
             group.Node.Refresh();
