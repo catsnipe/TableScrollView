@@ -387,7 +387,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
 
         table            = _table;
-        ItemCount         = table.Length;
+        ItemCount         = table == null ? 0 : table.Length;
         if (selectedIndex >= ItemCount)
         {
             selectedIndex = ItemCount-1;
@@ -411,6 +411,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         int viewMax = (int)(scrollSize / (nodeSize + nodeSpace));
         int nodeMax = viewMax + 2;
+        if (nodeMax > ItemCount)
+        {
+            nodeMax = ItemCount;
+        }
 
         for (int i = 0; i < nodeMax; i++)
         {
@@ -478,8 +482,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         {
             return;
         }
-        selindex = Mathf.Clamp(selindex, 0, table.Length-1);
-        reserveSelectedIndex  = selindex;
+
+        if (selindex >= 0)
+        {
+            selindex = Mathf.Clamp(selindex, 0, table.Length-1);
+            reserveSelectedIndex  = selindex;
+        }
     }
     
     /// <summary>
