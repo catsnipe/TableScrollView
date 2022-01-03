@@ -17,12 +17,12 @@ public class SimpleScrollviewTest : MonoBehaviour
         }
 
         viewer?.Initialize();
-        viewer?.SetTable(viewerList.ToArray());
+        viewer?.SetTable(viewerList);
         viewer?.OnSelect.AddListener(OnSelectVertical);
         viewer?.OnKeyDown.AddListener(OnKeyDown);
     }
 
-    public void OnSelectVertical(object[] table, int itemIndex, int subIndex, bool isCancel)
+    public void OnSelectVertical(List<object> table, int itemIndex, int subIndex, bool isCancel)
     {
         int row = (int)table[itemIndex];
         Debug.Log($"selected vertical: {row}");

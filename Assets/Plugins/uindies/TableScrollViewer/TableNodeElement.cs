@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -19,8 +16,8 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     /// </summary>
     public const int              SUBINDEX_ROOT = -1;
 
-    public object[]               table;
-    TableScrollViewer             viewer;
+    public List<object>           table;
+    TableScrollViewer               viewer;
     int                           itemIndex = -1;
     int                           subIndex  = SUBINDEX_ROOT;
     bool                          initFocus = false;
@@ -115,7 +112,7 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     /// <summary>
     /// set viewer and Table(Data List): 表示するリストの設定
     /// </summary>
-    public void SetViewAndTable(TableScrollViewer _viewer, object[] _table)
+    public void SetViewAndTable(TableScrollViewer _viewer, List<object> _table)
     {
         viewer = _viewer;
         table  = _table;
@@ -138,7 +135,7 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
         {
             return;
         }
-        if (index >= table.Length)
+        if (index >= table.Count)
         {
             Debug.LogError($"指定行のデータは存在しません. '{index}'");
             return;
@@ -172,6 +169,14 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     public int GetItemIndex()
     {
         return itemIndex;
+    }
+
+    /// <summary>
+    /// get item
+    /// </summary>
+    public object GetItem()
+    {
+        return table[itemIndex];
     }
 
     /// <summary>
