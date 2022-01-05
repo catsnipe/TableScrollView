@@ -160,14 +160,9 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     [SerializeField, Range(1, 1000)]
     int                   SkipIndexByPageScroll = 10;
     /// <summary>
-    /// 全てのコンテンツがビュー内に含まれている場合、コンテンツをビューが埋まるよう自動的にリサイズ
-    /// </summary>
-    [SerializeField, Space(10), Tooltip("全てのコンテンツがビュー内に含まれている場合、コンテンツをビューが埋まるよう自動的にリサイズ")]
-    bool                  AutoCentering = true;
-    /// <summary>
     /// スクロールバーの自動フェードアウト
     /// </summary>
-    [SerializeField, Tooltip("スクロールバーの自動フェードアウト")]
+    [SerializeField, Space(10), Tooltip("スクロールバーの自動フェードアウト")]
     bool                  ScrollbarAutoFadeout = true;
     /// <summary>
     /// ドラッグ移動した際、自動的に項目が定位置に吸着する
@@ -359,18 +354,16 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         nodeSpace           = Spacing;
 
         RectTransform rect = SourceNode.GetComponent<RectTransform>();
-        if (Orientation     == eOrientation.Vertical)
+        if (Orientation == eOrientation.Vertical)
         {
-            scrollSize     = rectGetHeight(scrollRectTransform);
-            nodeAdjust     = rect.rect.y;
+            nodeAdjust = rect.rect.y;
 
             scrollRect.content.anchorMin = new Vector2(0, 1);
             scrollRect.content.anchorMax = new Vector2(1, 1);
         }
         else
         {
-            scrollSize     = rectGetWidth(scrollRectTransform);
-            nodeAdjust     = rect.rect.x;
+            nodeAdjust = rect.rect.x;
 
             scrollRect.content.anchorMin = new Vector2(0, 0);
             scrollRect.content.anchorMax = new Vector2(0, 1);
@@ -422,10 +415,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
         if (Orientation == eOrientation.Vertical)
         {
+            scrollSize   = rectGetHeight(scrollRectTransform);
             nodeSize     = rectGetHeight(SourceNode.GetComponent<RectTransform>());
         }
         else
         {
+            scrollSize   = rectGetWidth(scrollRectTransform);
             nodeSize     = rectGetWidth(SourceNode.GetComponent<RectTransform>());
         }
         contentSize      = paddingTop + paddingBottom + nodeSize * ItemCount + nodeSpace * (ItemCount-1);
@@ -456,35 +451,20 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             {
                 Debug.LogError("ScrollViewerNode を継承した Node クラスが SourceNode に存在しません.");
             }
-            if (group.Rect.pivot.x != 0.5f || group.Rect.pivot.y != 0.5f)
-            {
-                Debug.LogWarning($"ScrollViewer: Node Prefab の Pivot 値 (0.5, 0.5) 以外では正常位置に表示されません");
-            }
-            if (group.Rect.anchorMin.x != 0.5f || group.Rect.anchorMin.y != 0.5f || group.Rect.anchorMax.x != 0.5f || group.Rect.anchorMax.y != 0.5f)
-            {
-                Debug.LogWarning($"ScrollViewer: Node Prefab の anchor 値 (0.5, 0.5) 以外では正常位置に表示されません");
-            }
+            //if (group.Rect.pivot.x != 0.5f || group.Rect.pivot.y != 0.5f)
+            //{
+            //    Debug.LogWarning($"ScrollViewer: Node Prefab の Pivot 値 (0.5, 0.5) 以外では正常位置に表示されません");
+            //}
+            //if (group.Rect.anchorMin.x != 0.5f || group.Rect.anchorMin.y != 0.5f || group.Rect.anchorMax.x != 0.5f || group.Rect.anchorMax.y != 0.5f)
+            //{
+            //    Debug.LogWarning($"ScrollViewer: Node Prefab の anchor 値 (0.5, 0.5) 以外では正常位置に表示されません");
+            //}
 
             group.Node.SetEvent(nodeEnter, nodeClick);
             group.Node.SetViewAndTable(this, table);
 
             nodeGroups.Add(group);
             nodeSearch.Add(group.Node, group);
-        }
-
-        // １画面に項目が収まる場合、自動的に画面全てを使うよう項目をリサイズする
-        if (AutoCentering == true)
-        {
-            if (contentSize <= scrollSize)
-            {
-                if (Orientation == eOrientation.Vertical) rectSetHeight(scrollRectTransform, contentSize);
-                else                                      rectSetWidth(scrollRectTransform, contentSize);
-            }
-            else
-            {
-                if (Orientation == eOrientation.Vertical) rectSetHeight(scrollRectTransform, viewWH.y);
-                else                                      rectSetWidth(scrollRectTransform, viewWH.x);
-            }
         }
 
         if (Orientation == eOrientation.Vertical)
@@ -1317,11 +1297,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float rectGetWidth(RectTransform rect)
     {
-        return rect.sizeDelta.x;
+        return rect.rect.size.x;
     }
     float rectGetHeight(RectTransform rect)
     {
-        return rect.sizeDelta.y;
+        return rect.rect.size.y;
     }
     void rectSetWidth(RectTransform rect, float width)
     {
