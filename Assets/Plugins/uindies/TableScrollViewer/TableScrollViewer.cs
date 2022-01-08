@@ -451,14 +451,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             {
                 Debug.LogError("ScrollViewerNode を継承した Node クラスが SourceNode に存在しません.");
             }
-            //if (group.Rect.pivot.x != 0.5f || group.Rect.pivot.y != 0.5f)
-            //{
-            //    Debug.LogWarning($"ScrollViewer: Node Prefab の Pivot 値 (0.5, 0.5) 以外では正常位置に表示されません");
-            //}
-            //if (group.Rect.anchorMin.x != 0.5f || group.Rect.anchorMin.y != 0.5f || group.Rect.anchorMax.x != 0.5f || group.Rect.anchorMax.y != 0.5f)
-            //{
-            //    Debug.LogWarning($"ScrollViewer: Node Prefab の anchor 値 (0.5, 0.5) 以外では正常位置に表示されません");
-            //}
 
             group.Node.SetEvent(nodeEnter, nodeClick);
             group.Node.SetViewAndTable(this, table);
@@ -606,6 +598,28 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// <summary>
     /// テーブル行を追加します
     /// </summary>
+    public void InsertRow(int index, object row)
+    {
+        if (changeTable == null)
+        {
+            Debug.LogError("no modify table. You need to call BeginTableModify().");
+            return;
+        }
+        if (table[0].GetType() != row.GetType())
+        {
+            Debug.LogError("does not match Table.");
+            return;
+        }
+
+        index = index < 0 ? 0 : (index >= table.Count ? table.Count-1 : index);
+
+        changeTable.Insert(index, row);
+        changeSelectedIndex = index;
+    }
+
+    /// <summary>
+    /// テーブル行を追加します
+    /// </summary>
     public void AddRow(object row)
     {
         if (changeTable == null)
@@ -658,6 +672,19 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     public void InputEnabled(bool enabled)
     {
         CanvasGroup.blocksRaycasts = enabled;
+    }
+
+    /// <summary>
+    /// スクロール感度の設定。0 だとすぐ止まり、1 だと止まらない
+    /// </summary>
+    /// <param name="rate">スクロール感度</param>
+    public void SetDecelerationRate(float rate)
+    {
+        rate = Mathf.Clamp(rate, 0, 1);
+        if (scrollRect != null)
+        {
+            scrollRect.decelerationRate = rate;
+        }
     }
 
     /// <summary>
@@ -913,7 +940,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             {
                 v = velocity.x;
             }
-
             if (Math.Abs(v) < 750)
             {
                 break;
