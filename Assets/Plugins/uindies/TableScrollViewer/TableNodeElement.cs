@@ -17,20 +17,19 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     public const int              SUBINDEX_ROOT = -1;
 
     public List<object>           table;
-    TableScrollViewer               viewer;
+    TableScrollViewer             viewer;
     int                           itemIndex = -1;
     int                           subIndex  = SUBINDEX_ROOT;
     bool                          initFocus = false;
     bool                          focused;
     bool                          subIndexChanged;
 
-    bool subnodesIsNullOrEmpty()
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    public void Initialize()
     {
-        if (SubNodes == null || SubNodes.Length == 0)
-        {
-            return true;
-        }
-        return false;
+        onInitialize();
     }
 
     /// <summary>
@@ -90,6 +89,15 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
                 SubNodes[i].SetFocus(false, isAnimation);
             }
         }
+    }
+
+    bool subnodesIsNullOrEmpty()
+    {
+        if (SubNodes == null || SubNodes.Length == 0)
+        {
+            return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -280,6 +288,13 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
         OnPointerClick(SUBINDEX_ROOT);
+    }
+
+    /// <summary>
+    /// 初期化時コールされる
+    /// </summary>
+    public virtual void onInitialize()
+    {
     }
 
     /// <summary>

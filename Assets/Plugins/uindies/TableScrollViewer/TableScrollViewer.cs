@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -208,8 +209,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
     class NodeGroup
     {
-        public GameObject           Object;
-        public RectTransform        Rect;
+        public GameObject       Object;
+        public RectTransform    Rect;
         public TableNodeElement Node;
     }
 
@@ -233,12 +234,38 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
     int                 selectedIndex = -1;
     /// <summary>
+    /// 選択された行のデータ
+    /// </summary>
+    public object       SelectedRow
+    {
+        get
+        {
+            return table[SelectedIndex];
+        }
+    }
+    /// <summary>
+    /// 選択されたテーブルノード
+    /// </summary>
+    public TableNodeElement SelectedTableNode
+    {
+        get
+        {
+            if (reserveSelectedIndex >= 0)
+            {
+                Debug.LogWarning("SetSelectedIndex() 直後のテーブルノードは古い可能性があります.");
+            }
+            return selectedNodeGroup?.Node;
+        }
+    }
+    NodeGroup           selectedNodeGroup;
+    /// <summary>
     /// テーブル最大行数
     /// </summary>
     public int          ItemCount
     {
         get; private set;
     }
+
     /// <summary>
     /// 
     /// </summary>
@@ -279,7 +306,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                         nodeSearch;
     Dictionary<int, NodeGroup>
                         nodeIndex;
-    NodeGroup           currentNodeGroup;
 
     /// <summary>
     /// キー情報
@@ -353,6 +379,20 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         paddingBottom       = PaddingBottom;
         nodeSpace           = Spacing;
 
+        var nodeElement = SourceNode.GetComponent<TableNodeElement>();
+        if (nodeElement != null)
+        {
+            nodeElement.Initialize();
+        }
+        TableSubNodeElement[] nodeSubElements = SourceNode.GetComponentsInChildren<TableSubNodeElement>();
+        if (nodeSubElements != null)
+        {
+            foreach (var element in nodeSubElements)
+            {
+                element.Initialize();
+            }
+        }
+
         RectTransform rect = SourceNode.GetComponent<RectTransform>();
         if (Orientation == eOrientation.Vertical)
         {
@@ -377,6 +417,22 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         // event
         scrollRect.onValueChanged.AddListener(onValueChanged);
+    }
+
+    /// <summary>
+    /// 表示するテーブルの設定
+    /// </summary>
+    public void SetTable(object[] _table)
+    {
+        SetTable(_table.ToList());
+    }
+
+    /// <summary>
+    /// 表示するテーブルの設定
+    /// </summary>
+    public void SetTable(IList _table)
+    {
+        SetTable(_table.Cast<object>().ToList());
     }
 
     /// <summary>
@@ -407,7 +463,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             nodeIndex  = null;
         }
 
-        table            = _table;
+        table             = _table;
         ItemCount         = table == null ? 0 : table.Count;
         if (selectedIndex >= ItemCount)
         {
@@ -415,22 +471,22 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
         if (Orientation == eOrientation.Vertical)
         {
-            scrollSize   = rectGetHeight(scrollRectTransform);
-            nodeSize     = rectGetHeight(SourceNode.GetComponent<RectTransform>());
+            scrollSize    = rectGetHeight(scrollRectTransform);
+            nodeSize      = rectGetHeight(SourceNode.GetComponent<RectTransform>());
         }
         else
         {
-            scrollSize   = rectGetWidth(scrollRectTransform);
-            nodeSize     = rectGetWidth(SourceNode.GetComponent<RectTransform>());
+            scrollSize    = rectGetWidth(scrollRectTransform);
+            nodeSize      = rectGetWidth(SourceNode.GetComponent<RectTransform>());
         }
-        contentSize      = paddingTop + paddingBottom + nodeSize * ItemCount + nodeSpace * (ItemCount-1);
+        contentSize       = paddingTop + paddingBottom + nodeSize * ItemCount + nodeSpace * (ItemCount-1);
         
-        nodeGroups       = new List<NodeGroup>();
-        nodeSearch       = new Dictionary<TableNodeElement, NodeGroup>();
-        currentNodeGroup = null;
-        selectedSubIndex = TableNodeElement.SUBINDEX_ROOT;
+        nodeGroups        = new List<NodeGroup>();
+        nodeSearch        = new Dictionary<TableNodeElement, NodeGroup>();
+        selectedNodeGroup = null;
+        selectedSubIndex  = TableNodeElement.SUBINDEX_ROOT;
 
-        keyDownArgs      = new KeyDownArgs();
+        keyDownArgs       = new KeyDownArgs();
 
         int viewMax = (int)(scrollSize / (nodeSize + nodeSpace));
         int nodeMax = viewMax + 2;
@@ -473,8 +529,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
 
     /// <summary>
-    /// カーソルを移動させる
+    /// カーソルを指定行まで移動させる
     /// </summary>
+    /// <param name="selindex">指定行数</param>
+    /// <param name="_positionMove">指定行数までどのようにスクロールするか</param>
     public void SetSelectedIndex(object row, ePositionMoveMode _positionMove = ePositionMoveMode.OneFrame)
     {
         int index = table.FindIndex( (a) => a == row );
@@ -482,8 +540,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
 
     /// <summary>
-    /// カーソルを移動させる
+    /// カーソルを指定行まで移動させる
     /// </summary>
+    /// <param name="selindex">指定行数</param>
+    /// <param name="_positionMove">指定行数までどのようにスクロールするか</param>
     public void SetSelectedIndex(int selindex, ePositionMoveMode _positionMove = ePositionMoveMode.OneFrame)
     {
         if (checkUsable() == false)
@@ -499,6 +559,55 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
     }
     
+    /// <summary>
+    /// カーソルを指定行数移動させる
+    /// </summary>
+    /// <param name="amount">増減行数</param>
+    public void AddSelectedIndex(int amount, ePositionMoveMode _positionMove = ePositionMoveMode.OneFrame)
+    {
+        amount += SelectedIndex;
+        amount  = Mathf.Clamp(amount, 0, table.Count-1);
+        SetSelectedIndex(amount, _positionMove);
+    }
+
+    /// <summary>
+    /// TableSubNodeElement のポジション設定 
+    /// </summary>
+    /// <param name="subIndex"></param>
+    public void SetSubIndex(int subIndex)
+    {
+        if (selectedNodeGroup != null)
+        {
+            NodeGroup group = selectedNodeGroup;
+            if (group.Node.GetSubIndexMax() == 0)
+            {
+                subIndex = TableNodeElement.SUBINDEX_ROOT;
+            }
+            else
+            {
+                subIndex = Mathf.Clamp(subIndex, 0, group.Node.GetSubIndexMax()-1);
+            }
+
+            selectedSubIndex = subIndex;
+
+            group.Node.SetSubIndex(subIndex);
+            group.Node.SetFocus(true, false);
+        }
+    }
+
+    /// <summary>
+    /// TableSubNodeElement のポジション増減
+    /// </summary>
+    /// <param name="amount"></param>
+    public void AddSubIndex(int amount)
+    {
+        if (selectedNodeGroup != null)
+        {
+            NodeGroup group = selectedNodeGroup;
+            SetSubIndex(group.Node.GetSubIndex() + amount);
+        }
+    }
+
     /// <summary>
     /// SetSelectedIndex() でカーソルを動かしたか確認
     /// </summary>
@@ -777,12 +886,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             else
             if (keyDownArgs.Flag == keys[4])
             {
-                addSubIndex(-1);
+                AddSubIndex(-1);
             }
             else
             if (keyDownArgs.Flag == keys[5])
             {
-                addSubIndex(1);
+                AddSubIndex(1);
             }
         }
 
@@ -818,7 +927,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (move == ePositionMoveMode.ScrollMove)
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
-                OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                if (SelectAfterFocus == false)
+                {
+                    OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                }
 
                 focusIsAnimation = true;
                 timeNormPos = Time.time;
@@ -827,7 +939,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (move == ePositionMoveMode.OneFrame)
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, false);
-                OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                if (SelectAfterFocus == false)
+                {
+                    OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                }
 
                 timeNormPos = Time.time - ScrollTime;
             }
@@ -1173,7 +1288,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                     OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
                 }
 
-                currentNodeGroup = group;
+                selectedNodeGroup = group;
                 group.Node.SetFocus(true, true);
             }
             else
@@ -1210,25 +1325,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
     
     /// <summary>
-    /// SubIndex の増減
-    /// </summary>
-    /// <param name="amount"></param>
-    void addSubIndex(int amount)
-    {
-        if (currentNodeGroup != null)
-        {
-            NodeGroup group    = currentNodeGroup;
-            int       subIndex = group.Node.GetSubIndex() + amount;
-            subIndex = Mathf.Clamp(subIndex, 0, group.Node.GetSubIndexMax()-1);
-
-            selectedSubIndex = subIndex;
-
-            group.Node.SetSubIndex(subIndex);
-            group.Node.SetFocus(true, false);
-        }
-    }
-
-    /// <summary>
     /// フォーカス設定
     /// </summary>
     void setFocus(int selIndex)
@@ -1239,7 +1335,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
             if (selIndex >= 0 && selIndex == group.Node.GetItemIndex())
             {
-                currentNodeGroup = group;
+                selectedNodeGroup = group;
 
                 group.Node.SetSubIndex(selectedSubIndex);
                 group.Node.SetFocus(true, focusIsAnimation);

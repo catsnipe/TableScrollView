@@ -3,10 +3,18 @@ using UnityEngine.EventSystems;
 
 public class TableSubNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    TableNodeElement node      = null;
-    int              subIndex  = 0;
-    bool             initFocus = false;
-    bool             focused;
+    protected TableNodeElement node      = null;
+    int                        subIndex  = 0;
+    bool                       initFocus = false;
+    bool                       focused;
+
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    public void Initialize()
+    {
+        onInitialize();
+    }
 
     /// <summary>
     /// サブノードの構築
@@ -60,6 +68,13 @@ public class TableSubNodeElement : MonoBehaviour, IPointerClickHandler, IPointer
     void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
         node.OnPointerClick(subIndex);
+    }
+
+    /// <summary>
+    /// 初期化時コールされる
+    /// </summary>
+    public virtual void onInitialize()
+    {
     }
 
     /// <summary>
