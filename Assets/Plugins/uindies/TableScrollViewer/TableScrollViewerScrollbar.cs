@@ -5,8 +5,8 @@ using UnityEngine.UI;
 public partial class TableScrollViewer : MonoBehaviour
 {
     Scrollbar       scrollbar;
-    Image           image_scrollbar;
     CanvasGroup     cgroup_scrollbar;
+    Vector2         prePosition;
 
     bool            isScrollbarAutoFadeOut = false;
     
@@ -35,8 +35,10 @@ public partial class TableScrollViewer : MonoBehaviour
         nav.mode = Navigation.Mode.None;
         scrollbar.navigation = nav;
 
-        image_scrollbar  = scrollbar.gameObject.GetComponentInChildren<Image>();
         cgroup_scrollbar = safeGetCanvasGroup(scrollbar);
+        prePosition = new Vector2();
+        prePosition.x = scrollRect.content.transform.localPosition.x;
+        prePosition.y = scrollRect.content.transform.localPosition.y;
 
         if (ScrollbarAutoFadeout == true)
         {
@@ -56,9 +58,10 @@ public partial class TableScrollViewer : MonoBehaviour
             return;
         }
 
-//Debug.Log($"{scrollRect.velocity.y}");
+//Debug.Log($"{scrollRect.content.transform.localPosition.x} {scrollRect.content.transform.localPosition.y}");
         // キー、マウスホイール
-        if (scrollRect.velocity.y != 0)
+        if (prePosition.x != scrollRect.content.transform.localPosition.x ||
+            prePosition.y != scrollRect.content.transform.localPosition.y)
         {
             dispOnScrollbar();
         }
@@ -133,8 +136,11 @@ public partial class TableScrollViewer : MonoBehaviour
             yield return null;
         }
 
-        while (scrollRect.velocity.y != 0)
+        while (prePosition.x != scrollRect.content.transform.localPosition.x ||
+               prePosition.y != scrollRect.content.transform.localPosition.y)
         {
+            prePosition.x = scrollRect.content.transform.localPosition.x;
+            prePosition.y = scrollRect.content.transform.localPosition.y;
             yield return new WaitForSeconds(1);
         }
         yield return new WaitForSeconds(1);
