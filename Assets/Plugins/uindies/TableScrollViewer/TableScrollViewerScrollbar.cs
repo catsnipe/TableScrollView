@@ -23,7 +23,7 @@ public partial class TableScrollViewer : MonoBehaviour
         {
             scrollbar = scrollRect.horizontalScrollbar;
         }
-
+        
         if (scrollbar == null)
         {
             Debug.LogError("scrollbar handle is not found.");
@@ -56,13 +56,9 @@ public partial class TableScrollViewer : MonoBehaviour
             return;
         }
 
-//    Debug.Log($"{velocity.y}");
+//Debug.Log($"{scrollRect.velocity.y}");
         // キー、マウスホイール
-#if ENABLE_INPUT_SYSTEM
-        if (Padd.GetKey(ePad.AnyKey) == true || Padd.GetMouseWheel() != 0 || Padd.GetMouse().IsMoved == true)
-#else
-        if (Input.anyKey == true)
-#endif
+        if (scrollRect.velocity.y != 0)
         {
             dispOnScrollbar();
         }
@@ -103,7 +99,7 @@ public partial class TableScrollViewer : MonoBehaviour
 
         if (co_scrollbarOn != null)
         {
-            StopCoroutine(co_scrollbarOn);
+            return;
         }
         co_scrollbarOn = StartCoroutine(scrollbarOn());
     }
@@ -137,6 +133,10 @@ public partial class TableScrollViewer : MonoBehaviour
             yield return null;
         }
 
+        while (scrollRect.velocity.y != 0)
+        {
+            yield return new WaitForSeconds(1);
+        }
         yield return new WaitForSeconds(1);
 
         time = Time.time;

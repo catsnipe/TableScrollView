@@ -420,6 +420,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
 
     /// <summary>
+    /// テーブルリセット
+    /// </summary>
+    public void ResetTable()
+    {
+        SetTable((List<object>)null);
+    }
+
+    /// <summary>
     /// 表示するテーブルの設定
     /// </summary>
     public void SetTable(object[] _table)
