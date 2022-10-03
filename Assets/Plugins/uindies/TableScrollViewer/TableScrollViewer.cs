@@ -240,6 +240,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     {
         get
         {
+            if (SelectedIndex < 0 || SelectedIndex >= table.Count)
+            {
+                return null;
+            }
             return table[SelectedIndex];
         }
     }
