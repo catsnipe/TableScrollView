@@ -773,7 +773,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         changeTable.RemoveAt(index);
 
-        if (index <= changeSelectedIndex)
+        if (index < changeSelectedIndex)
         {
             // カーソル位置より上が消された場合、カーソルも１つ上に移動する
             changeSelectedIndex -= 1;
