@@ -699,6 +699,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     public void BeginUpdateTable()
     {
         // 変更用テーブル情報を作成
+        if (table == null)
+        {
+            Debug.LogError("table is null. cannot update.");
+            return;
+        }
         changeTable         = new List<object>(table);
         changeSelectedIndex = selectedIndex;
     }
@@ -726,7 +731,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             Debug.LogError("no modify table. You need to call BeginTableModify().");
             return;
         }
-        if (table[0].GetType() != row.GetType())
+        if (table.Count > 0 && table[0].GetType() != row.GetType())
         {
             Debug.LogError("does not match Table.");
             return;
@@ -748,7 +753,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             Debug.LogError("no modify table. You need to call BeginTableModify().");
             return;
         }
-        if (table[0].GetType() != row.GetType())
+        if (table.Count > 0 && table[0].GetType() != row.GetType())
         {
             Debug.LogError("does not match Table.");
             return;
