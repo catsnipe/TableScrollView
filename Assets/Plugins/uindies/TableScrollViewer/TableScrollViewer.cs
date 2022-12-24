@@ -568,6 +568,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             selindex = Mathf.Clamp(selindex, 0, table.Count-1);
             reserveSelectedIndex = selindex;
             positionMoveMode     = _positionMove;
+            selectedSubIndex     = -1;
         }
     }
     
