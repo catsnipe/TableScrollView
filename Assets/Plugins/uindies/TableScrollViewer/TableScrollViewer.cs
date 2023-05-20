@@ -335,6 +335,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float               nodeAdjust;
     /// <summary>
+    /// 表示最大数
+    /// </summary>
+    float               drawNodeMax;
+    /// <summary>
     /// テーブル
     /// </summary>
     List<object>        table;
@@ -371,6 +375,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         if (SourceNode == null)
         {
             Debug.LogError("SourceNode is not found. Please set by inspector.");
+            return;
+        }
+        if (CanvasGroup != null)
+        {
             return;
         }
 
@@ -452,15 +460,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     public void SetTable(List<object> _table)
     {
-        if (CanvasGroup == null)
-        {
-            Debug.LogError("Please call Initialize() before calling SetTable().");
-            return;
-        }
         if (SourceNode == null)
         {
             Debug.LogError("SourceNode is not found. Please set by inspector.");
             return;
+        }
+        if (CanvasGroup == null)
+        {
+            Initialize();
         }
 
         if (table != null)
@@ -995,6 +1002,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
 
         updateScrollbar();
+//viewerScroll(spos, false);
     }
 
     /// <summary>
@@ -1152,11 +1160,13 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         co_autoTarget = null;
     }
 
+//Vector2 spos;
     /// <summary>
     /// スクロールされるとコール
     /// </summary>
     void onValueChanged(Vector2 pos)
     {
+//spos = pos;
         viewerScroll(pos, false);
     }
 
@@ -1213,6 +1223,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 }
             }
 
+//DDisp.Log($"{spos.y} {top} {scrollRectTransform.GetHeight()}");
             var blankGroup = new List<NodeGroup>();
             foreach (var pair in nodeIndex)
             {
@@ -1232,6 +1243,22 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                     blankGroup.RemoveAt(0);
 
                     redrawNode(nindex[rindex], rindex);
+                }
+
+                var group = nindex[rindex];
+
+                float y = group.Rect.GetY() + top;
+                float nodeSizeHalf = group.Rect.GetHeight() / 2;
+//DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name}");
+//DDisp.Log($"{y <= -scrollRectTransform.GetHeight() - nodeSizeHalf} {y >= nodeSizeHalf} {y} {nodeSizeHalf} {-rectGetHeight(scrollRectTransform) - nodeSizeHalf}");
+                if (y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf || y >= nodeSizeHalf)
+                {
+                    group.Object.SetActive(false);
+//DDisp.Log($"kieta {group.Object.name}");
+                }
+                else
+                {
+                    group.Object.SetActive(true);
                 }
             }
 
@@ -1259,12 +1286,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     {
         if (rindex < 0 || rindex >= ItemCount)
         {
-            // データ最大数より下の項目は非表示
-            group.Rect.gameObject.SetActive(false);
+            // out of range
         }
         else
         {
-            group.Rect.gameObject.SetActive(true);
+            group.Object.SetActive(true);
             group.Node.SetItemIndex(rindex);
 
             if (Orientation == eOrientation.Vertical)
