@@ -101,7 +101,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9001077535735061519}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -325,7 +325,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 380, y: 320}
+  m_SizeDelta: {x: 370, y: 320}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9001077536109764278
 CanvasRenderer:
@@ -840,6 +840,11 @@ PrefabInstance:
       propertyPath: m_text
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 9027110992405342364, guid: 128eb6149d2f52943b1ab7c8494d18cb,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 35.57
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 128eb6149d2f52943b1ab7c8494d18cb, type: 3}
 --- !u!224 &8866508920466763504 stripped
@@ -991,6 +996,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9027110992405342364, guid: 128eb6149d2f52943b1ab7c8494d18cb,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 35.57
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 128eb6149d2f52943b1ab7c8494d18cb, type: 3}

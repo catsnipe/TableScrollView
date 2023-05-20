@@ -5,13 +5,14 @@ using UnityEngine.UI;
 
 public class SimpleScrollviewTest : MonoBehaviour
 {
+    [SerializeField]
+    TableScrollViewer    viewer;
+
     List<object>         viewerList = new List<object>();
 
     void Awake()
     {
-        TableScrollViewer viewer = this.gameObject.GetComponentInChildren<TableScrollViewer>();
-
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 1000; i++)
         {
            viewerList.Add(i);
         }
@@ -25,7 +26,7 @@ public class SimpleScrollviewTest : MonoBehaviour
     public void OnSelectVertical(List<object> table, int itemIndex, int subIndex, bool isCancel)
     {
         int row = (int)table[itemIndex];
-        Debug.Log($"selected vertical: {row}");
+        Debug.Log($"selected: {row}");
     }
 
     public void OnKeyDown(TableScrollViewer.KeyDownArgs args)

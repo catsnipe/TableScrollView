@@ -37,5 +37,7 @@ public class Node : TableNodeElement
         No.SetText("Line: " + (no+1).ToString("00"));
         Desc.SetText(Descriptions[no % Descriptions.Length]);
         Icon.sprite = IconSprites[no % IconSprites.Length];
+
+        this.name = No.text;
     }
 }

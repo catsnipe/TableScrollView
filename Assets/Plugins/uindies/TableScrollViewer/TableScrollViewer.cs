@@ -335,10 +335,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float               nodeAdjust;
     /// <summary>
-    /// 表示最大数
-    /// </summary>
-    float               drawNodeMax;
-    /// <summary>
     /// テーブル
     /// </summary>
     List<object>        table;
@@ -866,8 +862,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 keys[1] = eKeyMoveFlag.Right;
                 keys[2] = eKeyMoveFlag.PageLeft;
                 keys[3] = eKeyMoveFlag.PageRight;
-                keys[4] = eKeyMoveFlag.Left;
-                keys[5] = eKeyMoveFlag.Right;
+                keys[4] = eKeyMoveFlag.Up;
+                keys[5] = eKeyMoveFlag.Down;
             }
 
             if (reserveSelectedIndex >= 0)
@@ -1183,12 +1179,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         if (Orientation == eOrientation.Vertical)
         {
-            top      =  scrollRect.content.transform.localPosition.y;
+            top       =  scrollRect.content.transform.localPosition.y;
             itemIndex = (int)((top - paddingTop) / (nodeSize + nodeSpace));
         }
         else
         {
-            top      = -scrollRect.content.transform.localPosition.x;
+            top       = -scrollRect.content.transform.localPosition.x;
             itemIndex = (int)((top + paddingTop) / (nodeSize + nodeSpace));
         }
 
@@ -1223,7 +1219,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 }
             }
 
-//DDisp.Log($"{spos.y} {top} {scrollRectTransform.GetHeight()}");
+//DDisp.Log($"{spos.y} {top} {rectGetWidth(scrollRectTransform)} {rectGetHeight(scrollRectTransform)}");
             var blankGroup = new List<NodeGroup>();
             foreach (var pair in nodeIndex)
             {
@@ -1247,18 +1243,36 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
                 var group = nindex[rindex];
 
-                float y = group.Rect.GetY() + top;
-                float nodeSizeHalf = group.Rect.GetHeight() / 2;
-//DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name}");
-//DDisp.Log($"{y <= -scrollRectTransform.GetHeight() - nodeSizeHalf} {y >= nodeSizeHalf} {y} {nodeSizeHalf} {-rectGetHeight(scrollRectTransform) - nodeSizeHalf}");
-                if (y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf || y >= nodeSizeHalf)
+                if (Orientation == eOrientation.Vertical)
                 {
-                    group.Object.SetActive(false);
+                    float y = rectGetY(group.Rect) + top;
+                    float nodeSizeHalf = rectGetHeight(group.Rect) / 2;
+//DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name} {y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf} {y >= nodeSizeHalf} {y} {nodeSizeHalf} {-rectGetHeight(scrollRectTransform) - nodeSizeHalf}");
+                    if (y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf || y >= nodeSizeHalf)
+                    {
+                        group.Object.SetActive(false);
 //DDisp.Log($"kieta {group.Object.name}");
+                    }
+                    else
+                    {
+                        group.Object.SetActive(true);
+                    }
                 }
                 else
                 {
-                    group.Object.SetActive(true);
+                    float x = rectGetX(group.Rect) - top;
+                    float nodeSizeHalf = rectGetWidth(group.Rect) / 2;
+//DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name} {x <= -nodeSizeHalf} {x >= nodeSizeHalf} {x} {nodeSizeHalf} {rectGetWidth(scrollRectTransform) + nodeSizeHalf}");
+
+                    if (x <= -nodeSizeHalf || x >= rectGetWidth(scrollRectTransform) + nodeSizeHalf)
+                    {
+                        group.Object.SetActive(false);
+//DDisp.Log($"kieta {group.Object.name}");
+                    }
+                    else
+                    {
+                        group.Object.SetActive(true);
+                    }
                 }
             }
 
@@ -1492,6 +1506,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         Vector3 trans = rect.gameObject.transform.localPosition;
         trans.y = y;
         rect.gameObject.transform.localPosition = trans;
+    }
+    float rectGetX(RectTransform rect)
+    {
+        return rect.gameObject.transform.localPosition.x;
+    }
+    float rectGetY(RectTransform rect)
+    {
+        return rect.gameObject.transform.localPosition.y;
     }
 
     float cubicOut(float t)

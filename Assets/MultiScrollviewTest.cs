@@ -5,13 +5,14 @@ using UnityEngine.UI;
 
 public class MultiScrollviewTest : MonoBehaviour
 {
+    [SerializeField]
+    TableScrollViewer    viewer;
+
     List<object>         viewerList = new List<object>();
 
     void Awake()
     {
-        TableScrollViewer viewer = this.gameObject.GetComponentInChildren<TableScrollViewer>();
-
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 100; i++)
         {
            viewerList.Add(i);
         }
@@ -22,10 +23,12 @@ public class MultiScrollviewTest : MonoBehaviour
         viewer?.OnKeyDown.AddListener(OnKeyDown);
     }
 
+    static string[] items = { "ITEM", "A", "B", "C" };
+
     public void OnSelectVertical(List<object> table, int itemIndex, int subIndex, bool isCancel)
     {
         int row = (int)table[itemIndex];
-        Debug.Log($"selected vertical: {row} - {subIndex}");
+        Debug.Log($"multi selected: {row+1} - {items[subIndex+1]}");
     }
 
     public void OnKeyDown(TableScrollViewer.KeyDownArgs args)
