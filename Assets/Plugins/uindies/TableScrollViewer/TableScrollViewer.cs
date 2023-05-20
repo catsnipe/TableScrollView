@@ -335,6 +335,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float               nodeAdjust;
     /// <summary>
+    /// 画面外で余分に確保しておくノード数。基本は 0 で問題ないが、ウィンドウ可変でノード増加の可能性がある時に設定する
+    /// </summary>
+    int                 nodeExtraNumber;
+    /// <summary>
     /// テーブル
     /// </summary>
     List<object>        table;
@@ -366,7 +370,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// <summary>
     /// 初期化
     /// </summary>
-    public void Initialize()
+    /// <param name="_nodeExtraNumber">画面外で余分に確保しておくノード数。基本は 0 で問題ないが、ウィンドウ可変でノード増加の可能性がある時に設定する</param>
+    public void Initialize(int _nodeExtraNumber = 0)
     {
         if (SourceNode == null)
         {
@@ -386,6 +391,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         paddingTop          = PaddingTop;
         paddingBottom       = PaddingBottom;
         nodeSpace           = Spacing;
+        nodeExtraNumber     = _nodeExtraNumber;
 
         var nodeElement = SourceNode.GetComponent<TableNodeElement>();
         if (nodeElement != null)
@@ -504,7 +510,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         keyDownArgs       = new KeyDownArgs();
 
         int viewMax = (int)(scrollSize / (nodeSize + nodeSpace));
-        int nodeMax = viewMax + 2;
+        int nodeMax = viewMax + 2 + nodeExtraNumber;
         if (nodeMax > ItemCount)
         {
             nodeMax = ItemCount;
@@ -998,6 +1004,15 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
 
         updateScrollbar();
+
+        if (Orientation == eOrientation.Vertical)
+        {
+            scrollSize = rectGetHeight(scrollRectTransform);
+        }
+        else
+        {
+            scrollSize = rectGetWidth(scrollRectTransform);
+        }
 //viewerScroll(spos, false);
     }
 
@@ -1084,8 +1099,17 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             yield return null;
         }
 
-        int   sel0 = itemStart + nodeGroups.Count/2;
-        int   sel1 = itemStart + nodeGroups.Count/2 -1;
+        int visibleNodeCount = 0;
+        foreach (var node in nodeGroups)
+        {
+            if (node.Object.activeSelf == true)
+            {
+                visibleNodeCount++;
+            }
+        }
+
+        int   sel0 = itemStart + visibleNodeCount/2;
+        int   sel1 = itemStart + visibleNodeCount/2 -1;
         float tgt0 = getTargetNormalizedPosition(sel0);
         float tgt1 = getTargetNormalizedPosition(sel1);
 
