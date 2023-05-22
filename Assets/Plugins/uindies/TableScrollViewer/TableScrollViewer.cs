@@ -1191,7 +1191,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
 
         int   sel0 = itemStart + visibleNodeCount/2;
-        int   sel1 = itemStart + visibleNodeCount/2 -1;
+        int   sel1 = itemStart + visibleNodeCount/2 - 1;
+        if (sel1 < 0)
+        {
+            sel1 = sel0;
+        }
         float tgt0 = getTargetNormalizedPosition(sel0);
         float tgt1 = getTargetNormalizedPosition(sel1);
 
