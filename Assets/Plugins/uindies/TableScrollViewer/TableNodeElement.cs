@@ -14,15 +14,31 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     /// <summary>
     /// Root Sub-index
     /// </summary>
-    public const int              SUBINDEX_ROOT = -1;
+    public const int         SUBINDEX_ROOT = -1;
 
-    public List<object>           table;
-    TableScrollViewer             viewer;
-    int                           itemIndex = -1;
-    int                           subIndex  = SUBINDEX_ROOT;
-    bool                          initFocus = false;
-    bool                          focused;
-    bool                          subIndexChanged;
+    /// <summary>
+    /// Root RectTriangle
+    /// </summary>
+    public RectTransform  NodeRect
+    {
+        get
+        {
+            if (nodeRect == null)
+            {
+                nodeRect = GetComponent<RectTransform>();
+            }
+            return nodeRect;
+        }
+    }
+    RectTransform nodeRect;
+
+    public List<object>      table;
+    TableScrollViewer        viewer;
+    int                      itemIndex = -1;
+    int                      subIndex  = SUBINDEX_ROOT;
+    bool                     initFocus = false;
+    bool                     focused;
+    bool                     subIndexChanged;
 
     /// <summary>
     /// 初期化
@@ -30,6 +46,15 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     public void Initialize()
     {
         onInitialize();
+
+        TableSubNodeElement[] nodeSubElements = this.GetComponentsInChildren<TableSubNodeElement>();
+        if (nodeSubElements != null)
+        {
+            foreach (var element in nodeSubElements)
+            {
+                element.Initialize();
+            }
+        }
     }
 
     /// <summary>
@@ -227,6 +252,16 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
         eventClick?.Invoke(this);
     }
 
+    public virtual float GetCustomWidth(List<object> tbl, int itemIndex)
+    {
+        return RectGetWidth(NodeRect);
+    }
+
+    public virtual float GetCustomHeight(List<object> tbl, int itemIndex)
+    {
+        return RectGetHeight(NodeRect);
+    }
+
     public void OnPointerEnter(int sindex)
     {
 #if UNITY_STANDALONE
@@ -268,6 +303,30 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
 
             PerformClick(sindex);
         }
+    }
+
+    protected float RectGetWidth(RectTransform rect)
+    {
+        return rect.rect.size.x;
+    }
+
+    protected float RectGetHeight(RectTransform rect)
+    {
+        return rect.rect.size.y;
+    }
+
+    protected void RectSetWidth(RectTransform rect, float width)
+    {
+        var size = rect.sizeDelta;
+        size.x = width;
+        rect.sizeDelta = size;
+    }
+
+    protected void RectSetHeight(RectTransform rect, float height)
+    {
+        var size = rect.sizeDelta;
+        size.y = height;
+        rect.sizeDelta = size;
     }
 
     /// <summary>

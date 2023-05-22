@@ -1,10 +1,10 @@
-ï»¿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Node : TableNodeElement
+public class NodeHorizontalFreeSize : TableNodeElement
 {
     [SerializeField]
     TextMeshProUGUI    No = null;
@@ -19,8 +19,18 @@ public class Node : TableNodeElement
     [SerializeField]
     Sprite[]           IconSprites = null;
 
+    RectTransform      focusRect;
+
     /// <summary>
-    /// ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ ON/OFF ã®è¡¨ç¤ºã‚’ã“ã“ã«è¨˜è¿°ã™ã‚‹
+    /// ‰Šú‰»ƒR[ƒ‹‚³‚ê‚é
+    /// </summary>
+    public override void onInitialize()
+    {
+        focusRect = Focus.GetComponent<RectTransform>();
+    }
+
+    /// <summary>
+    /// ƒtƒH[ƒJƒX ON/OFF ‚Ì•\¦‚ğ‚±‚±‚É‹Lq‚·‚é
     /// </summary>
     public override void onEffectFocus(bool focus, bool isAnimation)
     {
@@ -28,7 +38,7 @@ public class Node : TableNodeElement
     }
 
     /// <summary>
-    /// è¡Œã®è¡¨ç¤ºæ›´æ–°é€šçŸ¥ãŒã‚ã£ãŸå ´åˆã€ã“ã“ã§è¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹
+    /// s‚Ì•\¦XV’Ê’m‚ª‚ ‚Á‚½ê‡A‚±‚±‚Å•\¦‚ğXV‚·‚é
     /// </summary>
     public override void onEffectChange(int itemIndex)
     {
@@ -38,6 +48,31 @@ public class Node : TableNodeElement
         Desc.SetText(Descriptions[no % Descriptions.Length]);
         Icon.sprite = IconSprites[no % IconSprites.Length];
 
+        float width = GetCustomWidth(table, itemIndex);
+
+        RectSetWidth(focusRect, width - 10);
+        RectSetWidth(NodeRect, width);
+
         this.name = No.text;
     }
+
+    public override float GetCustomWidth(List<object> tbl, int itemIndex)
+    {
+        int no = (int)tbl[itemIndex];
+
+        if ((no % 3) == 0)
+        {
+            return 380;
+        }
+        else
+        if ((no % 3) == 1)
+        {
+            return 580;
+        }
+        else
+        {
+            return 430;
+        }
+    }
+
 }

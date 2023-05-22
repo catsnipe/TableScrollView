@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SimpleScrollviewTest : MonoBehaviour
+public class TestScrollviewVertical : MonoBehaviour
 {
     [SerializeField]
     TableScrollViewer    viewer;
@@ -12,7 +12,7 @@ public class SimpleScrollviewTest : MonoBehaviour
 
     void Awake()
     {
-        for (int i = 0; i < 1000; i++)
+        for (int i = 0; i < 10; i++)
         {
            viewerList.Add(i);
         }
@@ -23,10 +23,20 @@ public class SimpleScrollviewTest : MonoBehaviour
         viewer?.OnKeyDown.AddListener(OnKeyDown);
     }
 
+    static string[] items = { "A", "B", "C" };
+
     public void OnSelectVertical(List<object> table, int itemIndex, int subIndex, bool isCancel)
     {
         int row = (int)table[itemIndex];
-        Debug.Log($"selected: {row}");
+
+        if (subIndex < 0)
+        {
+            Debug.Log($"selected: {row+1}");
+        }
+        else
+        {
+            Debug.Log($"sub selected: {row+1} - {items[subIndex]}");
+        }
     }
 
     public void OnKeyDown(TableScrollViewer.KeyDownArgs args)

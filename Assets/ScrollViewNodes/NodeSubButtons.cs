@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NodeSub : TableSubNodeElement
+public class NodeSubButtons : TableSubNodeElement
 {
     [SerializeField]
     Image                 Frame = null;

@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 7259718852130688817}
   - component: {fileID: 7259718852130688823}
   m_Layer: 5
-  m_Name: NodeSimple
+  m_Name: NodeVerticalFreeSize
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

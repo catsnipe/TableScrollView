@@ -129,7 +129,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// Node Prefab
     /// </summary>
     [SerializeField]
-    public GameObject     SourceNode = null;
+    public TableNodeElement
+                          SourceNode = null;
     /// <summary>
     /// スクロールする向き
     /// </summary>
@@ -212,6 +213,13 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         public GameObject       Object;
         public RectTransform    Rect;
         public TableNodeElement Node;
+    }
+
+    class RowDisplay
+    {
+        public float    Position;
+        public float    Size;
+        public float    LastPosition;
     }
 
     /// <summary>
@@ -316,6 +324,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     KeyDownArgs         keyDownArgs;
 
+    /// <summary>
+    /// 全行の表示位置など
+    /// </summary>
+    List<RowDisplay>    rowDisplays;
+
 
     /// <summary>
     /// Vertical Layout Group の Padding.Top/Bottom と同じ値
@@ -323,17 +336,9 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     float               paddingTop;
     float               paddingBottom;
     /// <summary>
-    /// Node の高さ
-    /// </summary>
-    float               nodeSize;
-    /// <summary>
     /// Vertical Layout Group の Spacing
     /// </summary>
     float               nodeSpace;
-    /// <summary>
-    /// ピボットなどでずれた分の補正
-    /// </summary>
-    float               nodeAdjust;
     /// <summary>
     /// 画面外で余分に確保しておくノード数。基本は 0 で問題ないが、ウィンドウ可変でノード増加の可能性がある時に設定する
     /// </summary>
@@ -393,32 +398,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         nodeSpace           = Spacing;
         nodeExtraNumber     = _nodeExtraNumber;
 
-        var nodeElement = SourceNode.GetComponent<TableNodeElement>();
-        if (nodeElement != null)
-        {
-            nodeElement.Initialize();
-        }
-        TableSubNodeElement[] nodeSubElements = SourceNode.GetComponentsInChildren<TableSubNodeElement>();
-        if (nodeSubElements != null)
-        {
-            foreach (var element in nodeSubElements)
-            {
-                element.Initialize();
-            }
-        }
-
         RectTransform rect = SourceNode.GetComponent<RectTransform>();
         if (Orientation == eOrientation.Vertical)
         {
-            nodeAdjust = rect.rect.y;
-
             scrollRect.content.anchorMin = new Vector2(0, 1);
             scrollRect.content.anchorMax = new Vector2(1, 1);
         }
         else
         {
-            nodeAdjust = rect.rect.x;
-
             scrollRect.content.anchorMin = new Vector2(0, 0);
             scrollRect.content.anchorMax = new Vector2(0, 1);
         }
@@ -493,15 +480,109 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         if (Orientation == eOrientation.Vertical)
         {
             scrollSize    = rectGetHeight(scrollRectTransform);
-            nodeSize      = rectGetHeight(SourceNode.GetComponent<RectTransform>());
         }
         else
         {
             scrollSize    = rectGetWidth(scrollRectTransform);
-            nodeSize      = rectGetWidth(SourceNode.GetComponent<RectTransform>());
         }
-        contentSize       = paddingTop + paddingBottom + nodeSize * ItemCount + nodeSpace * (ItemCount-1);
-        
+
+        rowDisplays = new List<RowDisplay>();
+
+        float position = 0;
+        float sizeMin  = scrollSize;
+
+        if (table.Count == 0)
+        {
+            //
+        }
+        else
+        {
+            // リスト全ての表示位置を計算
+            if (Orientation == eOrientation.Vertical)
+            {
+                position = SourceNode.GetCustomHeight(table, 0) / 2;
+                sizeMin  = SourceNode.GetCustomHeight(table, 0);
+                rowDisplays.Add(
+                    new RowDisplay()
+                    {
+                        Position = position,
+                        Size = sizeMin,
+                        LastPosition = position + sizeMin / 2
+                    }
+                );
+            }
+            else
+            {
+                position = 0;
+                sizeMin  = SourceNode.GetCustomWidth(table, 0);
+                rowDisplays.Add(
+                    new RowDisplay()
+                    {
+                        Position = position,
+                        Size = sizeMin,
+                        LastPosition = position + sizeMin
+                    }
+                );
+            }
+
+            for (int i = 1; i < table.Count; i++)
+            {
+                float size0;
+                float size1;
+
+                if (Orientation == eOrientation.Vertical)
+                {
+                    size0 = SourceNode.GetCustomHeight(table, i-1);
+                    size1 = SourceNode.GetCustomHeight(table, i);
+                }
+                else
+                {
+                    size0 = SourceNode.GetCustomWidth(table, i-1);
+                    size1 = SourceNode.GetCustomWidth(table, i); //  + nodeSpace;
+                }
+
+                if (sizeMin > size1)
+                {
+                    sizeMin = size1;
+                }
+
+                if (Orientation == eOrientation.Vertical)
+                {
+                    position += (size0 + size1) / 2;
+                }
+                else
+                {
+                    position += size0;
+                }
+
+                float lastPosition;
+
+                if (Orientation == eOrientation.Vertical)
+                {
+                    lastPosition = position + size1 / 2;
+                }
+                else
+                {
+                    lastPosition = position + size1;
+                }
+
+                rowDisplays.Add(
+                    new RowDisplay()
+                    {
+                        Position = position,
+                        Size = size1,
+                        LastPosition = lastPosition
+                    }
+                );
+            }
+        }
+
+        contentSize       = paddingTop + paddingBottom;
+        if (rowDisplays.Count > 0)
+        {
+            contentSize += rowDisplays[rowDisplays.Count-1].LastPosition;
+        }
+
         nodeGroups        = new List<NodeGroup>();
         nodeSearch        = new Dictionary<TableNodeElement, NodeGroup>();
         selectedNodeGroup = null;
@@ -509,7 +590,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         keyDownArgs       = new KeyDownArgs();
 
-        int viewMax = (int)(scrollSize / (nodeSize + nodeSpace));
+        int viewMax = (int)(scrollSize / sizeMin);
         int nodeMax = viewMax + 2 + nodeExtraNumber;
         if (nodeMax > ItemCount)
         {
@@ -518,10 +599,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         for (int i = 0; i < nodeMax; i++)
         {
-            GameObject obj  = Instantiate(SourceNode, scrollRect.content.transform);
+            TableNodeElement obj = Instantiate(SourceNode, scrollRect.content.transform);
+            obj.Initialize();
             NodeGroup group = new NodeGroup();
-            group.Object    = obj;
-            group.Node      = obj.GetComponent<TableNodeElement>();
+            group.Object    = obj.gameObject;
+            group.Node      = obj;
             group.Rect      = obj.GetComponent<RectTransform>();
             
             if (group.Node == null)
@@ -1190,6 +1272,30 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         viewerScroll(pos, false);
     }
 
+    int findIndexOfNextLargerNumber(float n, List<RowDisplay> list)
+    {
+        int left = 0;
+        int right = list.Count - 1;
+        int result = -1;
+
+        while (left <= right)
+        {
+            int mid = left + ((right - left) / 2);
+
+            if (list[mid].LastPosition <= n)
+            {
+                left = mid + 1;
+            }
+            else
+            {
+                right = mid - 1;
+                result = mid;
+            }
+        }
+
+        return result;
+    }
+
     void viewerScroll(Vector2 pos, bool initialize)
     {
         if (checkUsable() == false)
@@ -1203,14 +1309,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         if (Orientation == eOrientation.Vertical)
         {
-            top       =  scrollRect.content.transform.localPosition.y;
-            itemIndex = (int)((top - paddingTop) / (nodeSize + nodeSpace));
+            top =  scrollRect.content.transform.localPosition.y - paddingTop;
         }
         else
         {
-            top       = -scrollRect.content.transform.localPosition.x;
-            itemIndex = (int)((top + paddingTop) / (nodeSize + nodeSpace));
+            top = -scrollRect.content.transform.localPosition.x - paddingTop;
         }
+
+        itemIndex = findIndexOfNextLargerNumber(top, rowDisplays);
 
         if (nodeIndex == null)
         {
@@ -1333,11 +1439,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
             if (Orientation == eOrientation.Vertical)
             {
-                rectSetY(group.Rect, -getPos(rindex));
+                rectSetY(group.Rect, -(getPos(rindex)));
             }
             else
             {
-                rectSetX(group.Rect,  getPos(rindex));
+                rectSetX(group.Rect,   getPos(rindex) - group.Rect.rect.x);
             }
         }
     }
@@ -1473,7 +1579,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float getPos(int no)
     {
-        return paddingTop + no * (nodeSize + nodeSpace) - nodeAdjust;
+//        return paddingTop + rowPositions[no];
+        return paddingTop + rowDisplays[no].Position;
     }
 
     /// <summary>
@@ -1483,7 +1590,17 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// <returns>Target Normalized Position</returns>
     float getTargetNormalizedPosition(int selIndex)
     {
-        float contentCenter = contentSize - getPos(selIndex) - nodeSize * 0.5f;
+        float contentCenter;
+        
+        if (Orientation == eOrientation.Vertical)
+        {
+            contentCenter = contentSize - getPos(selIndex); // - nodeSize * 0.5f;
+        }
+        else
+        {
+            var rowdisp = rowDisplays[selIndex];
+            contentCenter = contentSize - getPos(selIndex) - rowdisp.Size / 2; // - nodeSize * 0.5f;
+        }
         float scrollCenter  = scrollSize * 0.5f;
 
         if (Orientation == eOrientation.Vertical)
