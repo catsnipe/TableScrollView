@@ -491,7 +491,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         float position = 0;
         float sizeMin  = scrollSize;
 
-        if (table.Count == 0)
+        if (table == null || table.Count == 0)
         {
             //
         }
