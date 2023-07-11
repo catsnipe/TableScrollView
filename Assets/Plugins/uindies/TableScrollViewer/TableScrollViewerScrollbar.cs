@@ -26,7 +26,6 @@ public partial class TableScrollViewer : MonoBehaviour
         
         if (scrollbar == null)
         {
-            Debug.LogError("scrollbar handle is not found.");
             return;
         }
 
@@ -51,6 +50,11 @@ public partial class TableScrollViewer : MonoBehaviour
     /// </summary>
     void updateScrollbar()
     {
+        if (scrollbar == null)
+        {
+            return;
+        }
+
         scrollbarAutoFadeOut(ScrollbarAutoFadeout);
 
         if (isScrollbarAutoFadeOut == false)
