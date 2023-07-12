@@ -548,11 +548,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
                 if (Orientation == eOrientation.Vertical)
                 {
-                    position += (size0 + size1) / 2;
+                    position += (size0 + size1) / 2 + nodeSpace;
                 }
                 else
                 {
-                    position += size0;
+                    position += size0 + nodeSpace;
                 }
 
                 float lastPosition;
