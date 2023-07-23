@@ -2020,9 +2020,9 @@ MonoBehaviour:
   SourceNode: {fileID: 7259718852130688823, guid: 5aa20c03523228a49a54f6bc375f7969,
     type: 3}
   Orientation: 0
-  PaddingTop: 0
-  PaddingBottom: 0
-  Spacing: 0
+  PaddingTop: 50
+  PaddingBottom: 50
+  Spacing: 50
   ScrollTime: 0.4
   SkipIndexByPageScroll: 10
   ScrollbarAutoFadeout: 1
@@ -2291,7 +2291,7 @@ MonoBehaviour:
   Orientation: 1
   PaddingTop: 0
   PaddingBottom: 0
-  Spacing: 0
+  Spacing: 50
   ScrollTime: 0.4
   SkipIndexByPageScroll: 10
   ScrollbarAutoFadeout: 1
