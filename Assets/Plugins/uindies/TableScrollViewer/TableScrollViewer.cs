@@ -135,42 +135,42 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// スクロールする向き
     /// </summary>
     [SerializeField]
-    eOrientation          Orientation = eOrientation.Vertical;
+    public eOrientation   Orientation = eOrientation.Vertical;
     /// <summary>
     /// Vertical Layout Group の Padding.Top 同様
     /// </summary>
     [SerializeField, Space(10)]
-    float                 PaddingTop = 0;
+    public float          PaddingTop = 0;
     /// <summary>
     /// Vertical Layout Group の Padding.Bottom 同様
     /// </summary>
     [SerializeField]
-    float                 PaddingBottom = 0;
+    public float          PaddingBottom = 0;
     /// <summary>
     /// Vertical Layout Group の Spacing 同様
     /// </summary>
     [SerializeField]
-    float                 Spacing = 0;
+    public float          Spacing = 0;
     /// <summary>
     /// スクロールスピード
     /// </summary>
     [SerializeField, Space(10), Range(0.01f, 1f)]
-    float                 ScrollTime = 0.5f;
+    public float          ScrollTime = 0.5f;
     /// <summary>
     /// ページスクロールする際に移動する項目量
     /// </summary>
     [SerializeField, Range(1, 1000)]
-    int                   SkipIndexByPageScroll = 10;
+    public int            SkipIndexByPageScroll = 10;
     /// <summary>
     /// スクロールバーの自動フェードアウト
     /// </summary>
     [SerializeField, Space(10), Tooltip("スクロールバーの自動フェードアウト")]
-    bool                  ScrollbarAutoFadeout = true;
+    public bool           ScrollbarAutoFadeout = true;
     /// <summary>
     /// ドラッグ移動した際、自動的に項目が定位置に吸着する
     /// </summary>
     [SerializeField, Tooltip("ドラッグ移動した際、自動的に項目が定位置に吸着する")]
-    bool                  AdsorptionTarget = true;
+    public bool           AdsorptionTarget = true;
     /// <summary>
     /// true では一度フォーカスを移してから、選択させるようにする。false だと即選択する
     /// </summary>
@@ -393,9 +393,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         CanvasGroup         = GetComponent<CanvasGroup>();
         parentGroups        = GetComponentsInParent<CanvasGroup>();
 
-        paddingTop          = PaddingTop;
-        paddingBottom       = PaddingBottom;
-        nodeSpace           = Spacing;
         nodeExtraNumber     = _nodeExtraNumber;
 
         RectTransform rect = SourceNode.GetComponent<RectTransform>();
@@ -458,6 +455,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         {
             Initialize();
         }
+
+        paddingTop    = PaddingTop;
+        paddingBottom = PaddingBottom;
+        nodeSpace     = Spacing;
 
         if (table != null)
         {
@@ -1192,6 +1193,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         int   sel0 = itemStart + visibleNodeCount/2;
         int   sel1 = itemStart + visibleNodeCount/2 - 1;
+        if (sel0 < 0)
+        {
+            yield break;
+        }
         if (sel1 < 0)
         {
             sel1 = sel0;
@@ -1280,7 +1285,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     {
         int left = 0;
         int right = list.Count - 1;
-        int result = -1;
+        int result = 0;
 
         while (left <= right)
         {
@@ -1313,11 +1318,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         if (Orientation == eOrientation.Vertical)
         {
-            top =  scrollRect.content.transform.localPosition.y - paddingTop;
+            top =  scrollRect.content.transform.localPosition.y;
         }
         else
         {
-            top = -scrollRect.content.transform.localPosition.x - paddingTop;
+            top = -scrollRect.content.transform.localPosition.x;
         }
 
         itemIndex = findIndexOfNextLargerNumber(top, rowDisplays);
@@ -1583,8 +1588,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     float getPos(int no)
     {
-//        return paddingTop + rowPositions[no];
-        return paddingTop + rowDisplays[no].Position;
+        if (no < 0 || no >= rowDisplays.Count)
+        {
+            return paddingTop;
+        }
+        else
+        {
+            return paddingTop + rowDisplays[no].Position;
+        }
     }
 
     /// <summary>
