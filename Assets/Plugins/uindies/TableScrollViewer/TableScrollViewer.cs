@@ -19,6 +19,17 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         Vertical,
         Horizontal,
     }
+
+    /// <summary>
+    /// 表示アライメント
+    /// </summary>
+    public enum eAlignment
+    {
+        Near,
+        Center,
+        Far,
+    }
+
     /// <summary>
     /// キー移動を促すフラグ
     /// </summary>
@@ -136,6 +147,11 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     [SerializeField]
     public eOrientation   Orientation = eOrientation.Vertical;
+    /// <summary>
+    /// 表示アライメント
+    /// </summary>
+    [SerializeField]
+    public eAlignment     Alignment = eAlignment.Near;
     /// <summary>
     /// Vertical Layout Group の Padding.Top 同様
     /// </summary>
@@ -619,16 +635,70 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             nodeSearch.Add(group.Node, group);
         }
 
+        float viewSize;
+        
         if (Orientation == eOrientation.Vertical)
         {
             rectSetHeight(scrollRect.content, contentSize);
+            viewSize = rectGetHeight(scrollRectTransform) - contentSize;
         }
         else
         {
             rectSetWidth(scrollRect.content, contentSize);
+            viewSize = rectGetWidth(scrollRectTransform) - contentSize;
         }
 
         scrollRect.content.transform.localPosition = Vector3.zero;
+
+        if (viewSize < 0)
+        {
+            scrollRect.viewport.anchoredPosition = new Vector2(0, 0);
+            scrollRect.viewport.sizeDelta = new Vector2(0, 0);
+        }
+        else
+        {
+            if (Orientation == eOrientation.Vertical)
+            {
+                if (Alignment == eAlignment.Near)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(0, 0);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, 0);
+                }
+                else
+                if (Alignment == eAlignment.Center)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(0, viewSize / 2);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, -viewSize);
+                }
+                else
+                if (Alignment == eAlignment.Far)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(0, viewSize);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, 0);
+                }
+            }
+            else
+            {
+                if (Alignment == eAlignment.Near)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(0, 0);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, 0);
+                }
+                else
+                if (Alignment == eAlignment.Center)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(viewSize / 2, 0);
+                    scrollRect.viewport.sizeDelta = new Vector2(-viewSize, 0);
+                }
+                else
+                if (Alignment == eAlignment.Far)
+                {
+                    scrollRect.viewport.anchoredPosition = new Vector2(viewSize, 0);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, 0);
+                }
+            }
+        }
+
         viewerScroll(new Vector2(0, 1), true);
     }
 

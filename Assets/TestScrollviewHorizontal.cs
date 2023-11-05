@@ -12,7 +12,7 @@ public class TestScrollviewHorizontal : MonoBehaviour
 
     void Awake()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 4; i++)
         {
            viewerList.Add(i);
         }

@@ -7,26 +7,17 @@ using UnityEngine.UI;
 public class NodeHorizontal : TableNodeElement
 {
     [SerializeField]
-    TextMeshProUGUI    No = null;
-    [SerializeField]
-    TextMeshProUGUI    Desc = null;
-    [SerializeField]
     Image              Icon = null;
     [SerializeField]
     Image              Focus = null;
     [SerializeField]
-    string[]           Descriptions = null;
-    [SerializeField]
     Sprite[]           IconSprites = null;
-
-    RectTransform      focusRect;
 
     /// <summary>
     /// èâä˙âªéûÉRÅ[ÉãÇ≥ÇÍÇÈ
     /// </summary>
     public override void onInitialize()
     {
-        focusRect = Focus.GetComponent<RectTransform>();
     }
 
     /// <summary>
@@ -34,7 +25,7 @@ public class NodeHorizontal : TableNodeElement
     /// </summary>
     public override void onEffectFocus(bool focus, bool isAnimation)
     {
-        Focus.color = new Color(0,0,0, focus == true ? 0.2f : 0.1f);
+        Focus.color = new Color(0,0,0, focus == true ? 0.5f : 0.1f);
     }
 
     /// <summary>
@@ -44,10 +35,8 @@ public class NodeHorizontal : TableNodeElement
     {
         int no = (int)table[itemIndex];
 
-        No.SetText("Line: " + (no+1).ToString("00"));
-        Desc.SetText(Descriptions[no % Descriptions.Length]);
         Icon.sprite = IconSprites[no % IconSprites.Length];
 
-        this.name = No.text;
+        this.name = "Line: " + (no+1).ToString("00");
     }
 }
