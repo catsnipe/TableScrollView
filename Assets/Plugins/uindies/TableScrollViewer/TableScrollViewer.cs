@@ -640,16 +640,17 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         if (Orientation == eOrientation.Vertical)
         {
             rectSetHeight(scrollRect.content, contentSize);
-            viewSize = rectGetHeight(scrollRectTransform) - contentSize;
+            viewSize = scrollRectTransform.GetHeight() - contentSize;
         }
         else
         {
             rectSetWidth(scrollRect.content, contentSize);
-            viewSize = rectGetWidth(scrollRectTransform) - contentSize;
+            viewSize = scrollRectTransform.GetWidth() - contentSize;
         }
 
         scrollRect.content.transform.localPosition = Vector3.zero;
 
+        // Alignment
         if (viewSize < 0)
         {
             scrollRect.viewport.anchoredPosition = new Vector2(0, 0);
