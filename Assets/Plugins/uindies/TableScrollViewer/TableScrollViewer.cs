@@ -168,10 +168,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     [SerializeField]
     public float          Spacing = 0;
     /// <summary>
-    /// スクロールスピード
+    /// スクロールに要する時間
     /// </summary>
     [SerializeField, Space(10), Range(0.01f, 1f)]
-    public float          ScrollTime = 0.5f;
+    public float          ScrollTime = 0.2f;
     /// <summary>
     /// ページスクロールする際に移動する項目量
     /// </summary>
@@ -490,9 +490,13 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
         table             = _table;
         ItemCount         = table == null ? 0 : table.Count;
+        if (selectedIndex < -1)
+        {
+            selectedIndex = -1;
+        }
         if (selectedIndex >= ItemCount)
         {
-            selectedIndex = ItemCount-1;
+            selectedIndex = ItemCount - 1;
         }
         if (Orientation == eOrientation.Vertical)
         {
