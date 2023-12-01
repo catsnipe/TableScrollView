@@ -644,12 +644,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         if (Orientation == eOrientation.Vertical)
         {
             rectSetHeight(scrollRect.content, contentSize);
-            viewSize = scrollRectTransform.GetHeight() - contentSize;
+            viewSize = rectGetHeight(scrollRectTransform) - contentSize;
         }
         else
         {
             rectSetWidth(scrollRect.content, contentSize);
-            viewSize = scrollRectTransform.GetWidth() - contentSize;
+            viewSize = rectGetWidth(scrollRectTransform) - contentSize;
         }
 
         scrollRect.content.transform.localPosition = Vector3.zero;
@@ -1112,10 +1112,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (move == ePositionMoveMode.ScrollMove)
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
-                if (SelectAfterFocus == false)
-                {
-                    OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
-                }
 
                 focusIsAnimation = true;
                 timeNormPos = Time.time;
@@ -1124,10 +1120,6 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (move == ePositionMoveMode.OneFrame)
             {
                 OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, false);
-                if (SelectAfterFocus == false)
-                {
-                    OnSelect?.Invoke(table, selectedIndex, selectedSubIndex, false);
-                }
 
                 timeNormPos = Time.time - ScrollTime;
             }

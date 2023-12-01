@@ -95,6 +95,7 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
         }
 //Debug.Log($"focus:{itemIndex} {focus}");
         // フォーカス ON/OFF の時の表示をここでカスタマイズする
+
         onEffectFocus(focus, isAnimation);
 
         initFocus = true;
