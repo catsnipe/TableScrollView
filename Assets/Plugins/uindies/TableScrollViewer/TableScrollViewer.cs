@@ -672,12 +672,20 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 else
                 if (Alignment == eAlignment.Center)
                 {
+                    if (scrollRect.verticalScrollbar != null)
+                    {
+                        Debug.LogError("Alignment cannot be specified because 'Vertical Scrollbar' exists. ");
+                    }
                     scrollRect.viewport.anchoredPosition = new Vector2(0, viewSize / 2);
                     scrollRect.viewport.sizeDelta = new Vector2(0, -viewSize);
                 }
                 else
                 if (Alignment == eAlignment.Far)
                 {
+                    if (scrollRect.verticalScrollbar != null)
+                    {
+                        Debug.LogError("Alignment cannot be specified because 'Vertical Scrollbar' exists. ");
+                    }
                     scrollRect.viewport.anchoredPosition = new Vector2(0, viewSize);
                     scrollRect.viewport.sizeDelta = new Vector2(0, 0);
                 }
@@ -692,12 +700,20 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 else
                 if (Alignment == eAlignment.Center)
                 {
+                    if (scrollRect.horizontalScrollbar != null)
+                    {
+                        Debug.LogError("Alignment cannot be specified because 'Horizontal Scrollbar' exists. ");
+                    }
                     scrollRect.viewport.anchoredPosition = new Vector2(viewSize / 2, 0);
                     scrollRect.viewport.sizeDelta = new Vector2(-viewSize, 0);
                 }
                 else
                 if (Alignment == eAlignment.Far)
                 {
+                    if (scrollRect.horizontalScrollbar != null)
+                    {
+                        Debug.LogError("Alignment cannot be specified because 'Horizontal Scrollbar' exists. ");
+                    }
                     scrollRect.viewport.anchoredPosition = new Vector2(viewSize, 0);
                     scrollRect.viewport.sizeDelta = new Vector2(0, 0);
                 }
