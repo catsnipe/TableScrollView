@@ -1127,7 +1127,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             else
             if (move == ePositionMoveMode.ScrollMove)
             {
-                OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
+                if (table.Count > 0)
+                {
+                    OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, true);
+                }
 
                 focusIsAnimation = true;
                 timeNormPos = Time.time;
@@ -1135,7 +1138,10 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             else
             if (move == ePositionMoveMode.OneFrame)
             {
-                OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                if (table.Count > 0)
+                {
+                    OnCursorMove?.Invoke(table, selectedIndex, selectedSubIndex, false);
+                }
 
                 timeNormPos = Time.time - ScrollTime;
             }
