@@ -79,6 +79,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         /// 右にページ移動
         /// </summary>
         PageRight,
+        /// <summary>
+        /// 先頭へ
+        /// </summary>
+        ToTop,
+        /// <summary>
+        /// 末尾へ
+        /// </summary>
+        ToBottom,
     }
     /// <summary>
     /// KeyDown EventArgs
@@ -1093,6 +1101,16 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             if (keyDownArgs.Flag == keys[5])
             {
                 AddSubIndex(1);
+            }
+            else
+            if (keyDownArgs.Flag == eKeyMoveFlag.ToTop)
+            {
+                selIndex = 0;
+            }
+            else
+            if (keyDownArgs.Flag == eKeyMoveFlag.ToBottom)
+            {
+                selIndex = ItemCount-1;
             }
         }
 
