@@ -1,4 +1,26 @@
-﻿using System;
+﻿// Copyright (c) catsnipe
+// Released under the MIT license
+
+// Permission is hereby granted, free of charge, to any person obtaining a 
+// copy of this software and associated documentation files (the 
+// "Software"), to deal in the Software without restriction, including 
+// without limitation the rights to use, copy, modify, merge, publish, 
+// distribute, sublicense, and/or sell copies of the Software, and to 
+// permit persons to whom the Software is furnished to do so, subject to 
+// the following conditions:
+   
+// The above copyright notice and this permission notice shall be 
+// included in all copies or substantial portions of the Software.
+   
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,8 +30,10 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     [SerializeField]
     TableSubNodeElement[]    SubNodes = null;
 
-    Action<TableNodeElement> eventEnter;
-    Action<TableNodeElement> eventClick;
+    Action<TableNodeElement, bool>
+                             eventEnter;
+    Action<TableNodeElement, bool>
+                             eventClick;
 
     /// <summary>
     /// Root Sub-index
@@ -46,6 +70,8 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     public void Initialize()
     {
         onInitialize();
+
+        enabled = true;
 
         TableSubNodeElement[] nodeSubElements = this.GetComponentsInChildren<TableSubNodeElement>();
         if (nodeSubElements != null)
@@ -127,9 +153,9 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     }
 
     /// <summary>
-    /// get focus
+    /// check focus
     /// </summary>
-    public bool GetFocus()
+    public bool CheckFocus()
     {
         return focused;
     }
@@ -137,7 +163,7 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     /// <summary>
     /// Mouse enter
     /// </summary>
-    public void SetEvent(Action<TableNodeElement> _eventEnter, Action<TableNodeElement> _eventClick)
+    public void SetEvent(Action<TableNodeElement, bool> _eventEnter, Action<TableNodeElement, bool> _eventClick)
     {
         eventEnter = _eventEnter;
         eventClick = _eventClick;
@@ -243,14 +269,23 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
     /// </summary>
     public void PerformClick(int sindex)
     {
+        performClick(sindex, false);
+    }
+
+    void performClick(int sindex, bool click)
+    {
         SetSubIndex(sindex);
 
-        onEffectClick();
-        if (subnodesIsNullOrEmpty() == false && subIndex != SUBINDEX_ROOT)
+        if (click == false ||
+            viewer.CheckTouchEnable() == true)
         {
-            SubNodes[subIndex].onEffectClick();
+            onEffectClick();
+            if (subnodesIsNullOrEmpty() == false && subIndex != SUBINDEX_ROOT)
+            {
+                SubNodes[subIndex].onEffectClick();
+            }
         }
-        eventClick?.Invoke(this);
+        eventClick?.Invoke(this, click);
     }
 
     public virtual float GetCustomWidth(List<object> tbl, int itemIndex)
@@ -272,7 +307,7 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
             //subIndex = sindex;
             //setSubNodeFocus(focused, true);
 
-            eventEnter?.Invoke(this);
+            eventEnter?.Invoke(this, true);
         }
 #endif
     }
@@ -290,19 +325,19 @@ public class TableNodeElement : MonoBehaviour, IPointerClickHandler, IPointerEnt
             // 1回目フォーカス、２回目選択
             if (focused == false)
             {
-                eventEnter?.Invoke(this);
+                eventEnter?.Invoke(this, true);
             }
             else
             {
-                PerformClick(sindex);
+                performClick(sindex, true);
             }
         }
         else
         {
             // フォーカスと選択を同時に
-            eventEnter?.Invoke(this);
+            eventEnter?.Invoke(this, true);
 
-            PerformClick(sindex);
+            performClick(sindex, true);
         }
     }
 

@@ -1,4 +1,26 @@
-﻿using System;
+﻿// Copyright (c) catsnipe
+// Released under the MIT license
+
+// Permission is hereby granted, free of charge, to any person obtaining a 
+// copy of this software and associated documentation files (the 
+// "Software"), to deal in the Software without restriction, including 
+// without limitation the rights to use, copy, modify, merge, publish, 
+// distribute, sublicense, and/or sell copies of the Software, and to 
+// permit persons to whom the Software is furnished to do so, subject to 
+// the following conditions:
+   
+// The above copyright notice and this permission notice shall be 
+// included in all copies or substantial portions of the Software.
+   
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,6 +137,14 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     }
 
     /// <summary>
+    /// CheckSelectable の戻り値
+    /// </summary>
+    public class SelectableResult
+    {
+        public bool Enabled = true;
+    };
+
+    /// <summary>
     /// キー入力が必要になった時に呼ばれるイベント
     /// </summary>
     [Serializable]
@@ -143,6 +173,19 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// </summary>
     [Serializable]
     public class OnCursorMoveEvent : UnityEvent<List<object>, int, int, bool> {}
+
+    /// <summary>
+    /// 選択可能な項目か確認するイベント
+    /// object[] table, int itemIndex, int subIndex : SelectableResult
+    /// 
+    /// 
+    /// (table) テーブル
+    /// (itemIndex) 選択されている行
+    /// (subIndex) 選択されている列（行のサブアイテム）
+    /// (SelectableResult) 戻り値. 選択可能なら true、選択禁止なら false
+    /// </summary>
+    [Serializable]
+    public class OnCheckSelectableEvent : UnityEvent<List<object>, int, int, SelectableResult> {}
 
     /// <summary>
     /// Node Prefab
@@ -228,7 +271,17 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     [SerializeField]
     public OnCursorMoveEvent
                           OnCursorMove = null;
-    
+    /// <summary>
+    /// 選択可能な項目か確認するイベント
+    /// (table) テーブル
+    /// (itemIndex) 選択されている行
+    /// (subIndex) 選択されている列（行のサブアイテム）
+    /// (result) true..選択可能、false..選択禁止
+    /// </summary>
+    [SerializeField]
+    public OnCheckSelectableEvent
+                          OnCheckSelectable = null;
+
 //[SerializeField]
 //TextMeshProUGUI text;
 
@@ -396,6 +449,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
 
     bool                focusIsAnimation = false;
 
+    bool                touchEnabled = true;
+
     /// <summary>
     /// 初期化
     /// </summary>
@@ -436,9 +491,51 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         positionMoveMode     = ePositionMoveMode.OneFrame;
 
         initScrollbar();
+        SetTouchEnable(true);
 
         // event
         scrollRect.onValueChanged.AddListener(onValueChanged);
+    }
+
+    /// <summary>
+    /// タッチ許可・禁止
+    /// </summary>
+    public void SetTouchEnable(bool enabled)
+    {
+        touchEnabled = enabled;
+
+        if (enabled == true)
+        {
+            if (scrollRect != null)
+            {
+                scrollRect.movementType = ScrollRect.MovementType.Elastic;
+                scrollRect.scrollSensitivity = 35;
+            }
+            if (scrollbar != null)
+            {
+                scrollbar.interactable = true;
+            }
+        }
+        else
+        {
+            if (scrollRect != null)
+            {
+                scrollRect.movementType = ScrollRect.MovementType.Clamped;
+                scrollRect.scrollSensitivity = 0;
+            }
+            if (scrollbar != null)
+            {
+                scrollbar.interactable = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// タッチ許可・禁止の確認
+    /// </summary>
+    public bool CheckTouchEnable()
+    {
+        return touchEnabled;
     }
 
     /// <summary>
@@ -670,6 +767,9 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
         else
         {
+            //★ ViewPort の値を自動的に変更してしまうため、
+            //★ インスペクタで別途設定された値は無効化される
+
             if (Orientation == eOrientation.Vertical)
             {
                 if (Alignment == eAlignment.Near)
@@ -684,8 +784,8 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                     {
                         Debug.LogError("Alignment cannot be specified because 'Vertical Scrollbar' exists. ");
                     }
-                    scrollRect.viewport.anchoredPosition = new Vector2(0, viewSize / 2);
-                    scrollRect.viewport.sizeDelta = new Vector2(0, -viewSize);
+                    scrollRect.viewport.anchoredPosition = new Vector2(0, -viewSize/2);
+                    scrollRect.viewport.sizeDelta = new Vector2(0, viewSize);
                 }
                 else
                 if (Alignment == eAlignment.Far)
@@ -745,19 +845,26 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// <summary>
     /// カーソルを指定行まで移動させる
     /// </summary>
-    /// <param name="selindex">指定行数</param>
+    /// <param name="selIndex">指定行数</param>
     /// <param name="_positionMove">指定行数までどのようにスクロールするか</param>
-    public void SetSelectedIndex(int selindex, ePositionMoveMode _positionMove = ePositionMoveMode.OneFrame)
+    public void SetSelectedIndex(int selIndex, ePositionMoveMode _positionMove = ePositionMoveMode.OneFrame)
     {
         if (checkUsable() == false)
         {
             return;
         }
 
-        if (selindex >= 0)
+        var result = new SelectableResult();
+        OnCheckSelectable?.Invoke(table, selIndex, selectedSubIndex, result);
+        if (result.Enabled == false)
         {
-            selindex = Mathf.Clamp(selindex, 0, table.Count-1);
-            reserveSelectedIndex = selindex;
+            selIndex = indexRight(selIndex + 1, selIndex);
+        }
+
+        if (selIndex >= 0)
+        {
+            selIndex = Mathf.Clamp(selIndex, 0, table.Count-1);
+            reserveSelectedIndex = selIndex;
             positionMoveMode     = _positionMove;
             selectedSubIndex     = -1;
         }
@@ -771,7 +878,50 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     {
         amount += SelectedIndex;
         amount  = Mathf.Clamp(amount, 0, table.Count-1);
-        SetSelectedIndex(amount, _positionMove);
+        if (amount != SelectedIndex)
+        {
+            SetSelectedIndex(amount, _positionMove);
+        }
+    }
+
+    /// <summary>
+    /// 現在選択できる一番上の項目を取得
+    /// </summary>
+    public int GetSelectableTopIndex()
+    {
+        int i = 0;
+
+        for ( ; i < ItemCount-1; i++)
+        {
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                return i;
+            }
+        }
+
+        return i;
+    }
+
+    /// <summary>
+    /// 現在選択できる一番下の項目を取得
+    /// </summary>
+    public int GetSelectableBottomIndex()
+    {
+        int i = ItemCount-1;
+
+        for ( ; i > 0; i--)
+        {
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                return i;
+            }
+        }
+
+        return i;
     }
 
     /// <summary>
@@ -1061,36 +1211,22 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             else
             if (keyDownArgs.Flag == keys[0])
             {
-                if (--selIndex < 0)
-                {
-                    selIndex = 0;
-                }
+                selIndex = indexLeft(selIndex - 1, selIndex);
             }
             else
             if (keyDownArgs.Flag == keys[1])
             {
-                if (++selIndex >= ItemCount)
-                {
-                    selIndex = ItemCount-1;
-                }
+                selIndex = indexRight(selIndex + 1, selIndex);
             }
             else
             if (keyDownArgs.Flag == keys[2])
             {
-                selIndex -= SkipIndexByPageScroll;
-                if (selIndex < 0)
-                {
-                    selIndex = 0;
-                }
+                selIndex = indexLeft(selIndex - SkipIndexByPageScroll, selIndex);
             }
             else
             if (keyDownArgs.Flag == keys[3])
             {
-                selIndex += SkipIndexByPageScroll;
-                if (selIndex >= ItemCount)
-                {
-                    selIndex = ItemCount-1;
-                }
+                selIndex = indexRight(selIndex + SkipIndexByPageScroll, selIndex);
             }
             else
             if (keyDownArgs.Flag == keys[4])
@@ -1105,12 +1241,12 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
             else
             if (keyDownArgs.Flag == eKeyMoveFlag.ToTop)
             {
-                selIndex = 0;
+                selIndex = indexTop(0, selIndex);
             }
             else
             if (keyDownArgs.Flag == eKeyMoveFlag.ToBottom)
             {
-                selIndex = ItemCount-1;
+                selIndex = indexBottom(ItemCount-1, selIndex);
             }
         }
 
@@ -1492,7 +1628,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 if (Orientation == eOrientation.Vertical)
                 {
                     float y = rectGetY(group.Rect) + top;
-                    float nodeSizeHalf = rectGetHeight(group.Rect) / 2;
+                    float nodeSizeHalf = rectGetHeight(group.Rect) * 0.5f;
 //DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name} {y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf} {y >= nodeSizeHalf} {y} {nodeSizeHalf} {-rectGetHeight(scrollRectTransform) - nodeSizeHalf}");
                     if (y <= -rectGetHeight(scrollRectTransform) - nodeSizeHalf || y >= nodeSizeHalf)
                     {
@@ -1507,7 +1643,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
                 else
                 {
                     float x = rectGetX(group.Rect) - top;
-                    float nodeSizeHalf = rectGetWidth(group.Rect) / 2;
+                    float nodeSizeHalf = rectGetWidth(group.Rect) * 0.5f;
 //DDisp.Log($"{rindex} {group.Node.GetItemIndex()} {group.Object.name} {x <= -nodeSizeHalf} {x >= nodeSizeHalf} {x} {nodeSizeHalf} {rectGetWidth(scrollRectTransform) + nodeSizeHalf}");
 
                     if (x <= -nodeSizeHalf || x >= rectGetWidth(scrollRectTransform) + nodeSizeHalf)
@@ -1564,11 +1700,104 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         }
     }
 
+    int indexTop(int selIndex, int currentIndex)
+    {
+        int i = selIndex;
+
+        for ( ; i < currentIndex; i++)
+        {
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                break;
+            }
+        }
+
+        return i;
+    }
+
+    int indexBottom(int selIndex, int currentIndex)
+    {
+        int i = selIndex;
+
+        for ( ; i > currentIndex; i--)
+        {
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                break;
+            }
+        }
+
+        return i;
+    }
+
+    int indexLeft(int selIndex, int currentIndex)
+    {
+        int i = selIndex;
+
+        for ( ; ; i--)
+        {
+            if (i < 0)
+            {
+                i = ItemCount-1;
+            }
+            if (i == currentIndex)
+            {
+                break;
+            }
+
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                break;
+            }
+        }
+        
+        return i;
+    }
+
+    int indexRight(int selIndex, int currentIndex)
+    {
+        int i = selIndex;
+
+        for ( ; ; i++)
+        {
+            if (i >= ItemCount)
+            {
+                i = 0;
+            }
+            if (i == currentIndex)
+            {
+                break;
+            }
+
+            var result = new SelectableResult();
+            OnCheckSelectable?.Invoke(table, i, selectedSubIndex, result);
+            if (result.Enabled == true)
+            {
+                break;
+            }
+        }
+
+        return i;
+    }
+
     /// <summary>
     /// マウスカーソルが選択項目上に入った時にコール
     /// </summary>
-    void nodeEnter(TableNodeElement searchkey)
+    /// <param name="searchkey"></param>
+    /// <param name="click">true..タップ, false..キー操作</param>
+    void nodeEnter(TableNodeElement searchkey, bool click)
     {
+        if (click == true && touchEnabled == false)
+        {
+            return;
+        }
+
         if (timeNormPos > 0)
         {
             // キーで選択（移動）中はマウスイベントを禁止
@@ -1606,8 +1835,15 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
     /// <summary>
     /// 選択された時にコール
     /// </summary>
-    void nodeClick(TableNodeElement node)
+    /// <param name="node"></param>
+    /// <param name="click">true..タップ, false..キー操作</param>
+    void nodeClick(TableNodeElement node, bool click)
     {
+        if (click == true && touchEnabled == false)
+        {
+            return;
+        }
+
         select(node.GetItemIndex(), node.GetSubIndex(), false);
     }
 
@@ -1661,7 +1897,7 @@ public partial class TableScrollViewer : MonoBehaviour, IBeginDragHandler, IEndD
         {
             NodeGroup group = nodeGroups[i];
 
-            if (group.Node.GetFocus() == true)
+            if (group.Node.CheckFocus() == true)
             {
                 group.Node.PerformClick(group.Node.GetSubIndex());
                 break;
