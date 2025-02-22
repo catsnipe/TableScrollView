@@ -1,5 +1,5 @@
 # TableScrollView
-UI / ScrollView extension class for unity
+UI / ScrollRect extension class for unity
 
 ![image](https://www.create-forever.games/wp-content/uploads/2021/02/image-36.png)
 
@@ -25,4 +25,6 @@ unity2019 or later
 2. Create content node(TableNodeElement)  
 3. Attach TableScrollViewer  
 
-see more detail (japanese): https://www.create-forever.games/table-scroll-viewer/
+see more detail
+(english): https://zenn.dev/catsnipe/articles/10dd5955d6ada3
+(japanese): https://zenn.dev/catsnipe/articles/b2e187d05b7e36
